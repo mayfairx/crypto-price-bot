@@ -3,7 +3,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
 
 import os
-from price_checker import get_btc_price, check_price_changed, reset_price, show_saved_price
+from price_checker import get_btc_price, check_price_change, reset_price, show_saved_price
 
 load_dotenv()
 
@@ -17,7 +17,7 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"BTC Price: ${btc_price}")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = check_price_changed()
+    result = check_price_change()
     await update.message.reply_text(result)
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):

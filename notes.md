@@ -1,11 +1,11 @@
 ## Урок 1 — Crypto price bot: первая версия
 
 ### API request
-`def get_btc_price():` -> получить цену BTC с API
+`def get_btc_price():` -> получить цену BTC с API CoinGecko
 
-`requests.get(url, params=params)` -> отправить GET-запрос к API
+`requests.get(url, params=params, timeout=10)` -> отправить GET-запрос к API
 
-`response.json()` -> превратить ответ JSON в словарь Python
+`response.json()` -> превратить JSON-ответ в словарь Python
 
 `data["bitcoin"]["usd"]` -> достать цену BTC в долларах
 
@@ -14,20 +14,9 @@
 
 `timeout=10` -> ждать ответ максимум 10 секунд
 
-`response.status_code` -> проверить, успешно ли ответил сервер
+`response.status_code != 200` -> проверить, успешно ли ответил сервер
 
 `return None` -> вернуть пустое значение, если API не дал цену
-
-### cache
-`last_cached_price` -> хранить последнюю цену в памяти
-
-`last_cached_time` -> хранить время последнего успешного запроса
-
-`cache_seconds = 10` -> сколько секунд использовать кэш
-
-`time.time()` -> получить текущее время
-
-`if last_cached_price is not None and now - last_cached_time < cache_seconds:` -> вернуть цену из кэша, если она ещё свежая
 
 ### state
 `state.txt` -> файл, который хранит последнюю сохранённую цену
@@ -39,9 +28,13 @@
 `file.read().strip()` -> убрать лишние пробелы и переносы строки
 
 ### compare
-`check_price_changed()` -> сравнить текущую цену с прошлой
+`check_price_change()` -> сравнить текущую цену с прошлой
 
 `if current_price is None:` -> проверить, удалось ли получить цену
+
+`if last_price:` -> проверить, есть ли старая цена в `state.txt`
+
+`last_price = float(last_price)` -> перевести старую цену из строки в число
 
 `if current_price != last_price:` -> проверить, изменилась ли цена
 
@@ -53,7 +46,12 @@
 
 `abs(difference)` -> убрать минус у отрицательного числа
 
-`:.2f` -> показать число с двумя знаками после точки
+`:.2f` -> показать разницу с двумя знаками после точки
+
+### first run
+`write_last_price(current_price)` -> сохранить цену при первом запуске
+
+`return f"First saved price: ${current_price}"` -> сообщение, если старой цены ещё не было
 
 ### show/reset
 `reset_price()` -> очистить `state.txt`

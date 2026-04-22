@@ -1,17 +1,6 @@
 import requests
-import time
-
-last_cached_price = None
-last_cached_time = 0
-cache_seconds = 10
 
 def get_btc_price():
-    global last_cached_price, last_cached_time
-
-    now = time.time()
-
-    if last_cached_price is not None and now - last_cached_time < cache_seconds:
-        return last_cached_price
 
     url = "https://api.coingecko.com/api/v3/simple/price"
     params = {
@@ -22,7 +11,7 @@ def get_btc_price():
     try:
         response = requests.get(url, params=params, timeout=10)
 
-        if response.status_code !=200:
+        if response.status_code != 200:
             return None
         
         data = response.json()
@@ -31,8 +20,6 @@ def get_btc_price():
             return None
         
         price = data["bitcoin"]["usd"]
-        last_cached_price = price
-        last_cached_time = now
 
         return price
     
@@ -50,7 +37,7 @@ def write_last_price(price):
     with open("state.txt", "w", encoding="utf-8") as file:
         file.write(str(price))
 
-def check_price_changed():
+def check_price_change():
     current_price = get_btc_price()
 
     if current_price is None:
