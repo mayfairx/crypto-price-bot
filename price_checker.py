@@ -1,4 +1,18 @@
 import requests
+import json
+
+STATE_FILE = "state.json"
+
+def read_state():
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
+
+def write_state(state):
+    with open(STATE_FILE, "w", encoding="utf-8") as file:
+        json.dump(state, file)
 
 def get_coin_price(symbol):
 
@@ -37,23 +51,14 @@ def get_coin_price(symbol):
     except requests.RequestException:
         return None
 
-def get_state_filename(symbol):
-    return f"state_{symbol.lower()}.txt"
-
 def read_last_price(symbol):
-    filename = get_state_filename(symbol)
-
-    try: 
-        with open(filename, "r", encoding="utf-8") as file:
-            return file.read().strip()
-    except FileNotFoundError:
-        return ""
+    state = read_state()
+    return state.get(symbol.lower(), "")
     
 def write_last_price(symbol, price):
-    filename = get_state_filename(symbol)
-
-    with open(filename, "w", encoding="utf-8") as file:
-        file.write(str(price))
+    state = read_state()
+    state[symbol.lower()] = price
+    write_state(state)
 
 def check_price_change(symbol):
     current_price = get_coin_price(symbol)
@@ -91,12 +96,14 @@ def check_price_change(symbol):
         return f"First saved {symbol.upper()} price: ${current_price}"
 
 def reset_price(symbol):
-    filename = get_state_filename(symbol)
+    state = read_state()
 
-    with open(filename, "w", encoding="utf-8") as file:
-        file.write("")
-
-    return f"Saved {symbol.upper()} price reset."
+    if symbol.lower() in state:
+        del state[symbol.lower()]
+        write_state(state)
+        return f"Saved {symbol.upper()} price reset."
+    else:
+        return f"No saved {symbol.upper()} price."
 
 def show_saved_price(symbol):
     saved_price = read_last_price(symbol)

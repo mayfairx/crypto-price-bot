@@ -1,4 +1,7 @@
 import requests
+import json
+
+STATE_FILE = "..."
 
 def get_coin_price(symbol):
     coin_map = {
@@ -12,14 +15,8 @@ def get_coin_price(symbol):
     if not coin_id:
         return None
 
-    url = "https://api.coingecko.com/api/v3/simple/price"
-    params = {
-        "ids": ...,
-        "vs_currencies": "usd"
-    }
-
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(..., params=..., timeout=10)
 
         if response.status_code != ...:
             return None
@@ -34,23 +31,25 @@ def get_coin_price(symbol):
     except requests.RequestException:
         return None
 
-def get_state_filename(symbol):
-    return f"state_{...}.txt"
+def read_state():
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
+
+def write_state(state):
+    with open(STATE_FILE, "w", encoding="utf-8") as file:
+        json.dump(state, file)
 
 def read_last_price(symbol):
-    filename = get_state_filename(symbol)
-
-    try:
-        with open(filename, "r", encoding="utf-8") as file:
-            return ...
-    except FileNotFoundError:
-        return ""
+    state = read_state()
+    return state.get(..., "")
 
 def write_last_price(symbol, price):
-    filename = get_state_filename(symbol)
-
-    with open(filename, "w", encoding="utf-8") as file:
-        file.write(...)
+    state = read_state()
+    state[...] = price
+    write_state(state)
 
 def check_price_change(symbol):
     current_price = get_coin_price(symbol)
@@ -68,37 +67,29 @@ def check_price_change(symbol):
             write_last_price(symbol, current_price)
 
             if difference > 0:
-                return (
-                    f"{symbol.upper()} price changed.\n\n"
-                    f"Old price: ${...}\n"
-                    f"New price: ${...}\n"
-                    f"Difference: +${...:.2f}"
-                )
+                return ...
             else:
-                return (
-                    f"{symbol.upper()} price changed.\n\n"
-                    f"Old price: ${...}\n"
-                    f"New price: ${...}\n"
-                    f"Difference: -${...:.2f}"
-                )
+                return ...
         else:
-            return f"No changes.\n\nCurrent {symbol.upper()} price: ${...}"
+            return ...
     else:
         write_last_price(symbol, current_price)
-        return f"First saved {symbol.upper()} price: ${...}"
+        return ...
 
 def reset_price(symbol):
-    filename = get_state_filename(symbol)
+    state = read_state()
 
-    with open(filename, "w", encoding="utf-8") as file:
-        file.write("")
-
-    return f"Saved {symbol.upper()} price reset."
+    if symbol.lower() in state:
+        del state[symbol.lower()]
+        write_state(state)
+        return ...
+    else:
+        return ...
 
 def show_saved_price(symbol):
     saved_price = read_last_price(symbol)
 
     if saved_price:
-        return f"Saved {symbol.upper()} price: ${...}"
+        return ...
     else:
-        return f"No saved {symbol.upper()} price."
+        return ...

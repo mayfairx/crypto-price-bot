@@ -164,3 +164,39 @@
 
 ### stop job
 `price_job.schedule_removal()` -> остановить таймер  
+
+### JSON state
+`state.json` -> один файл для хранения сохранённых цен
+
+пример:
+{
+  "btc": 78322,
+  "eth": 2336.38
+}
+
+`import json` -> подключить модуль для работы с JSON
+
+`STATE_FILE = "state.json"` -> имя файла с состоянием
+
+`read_state()` -> прочитать весь JSON-файл
+
+`write_state(state)` -> записать весь словарь обратно в JSON
+
+`json.load(file)` -> прочитать JSON из файла
+
+`json.dump(state, file)` -> записать данные в JSON
+
+---
+
+### JSON price logic
+`read_last_price(symbol)` -> достать цену монеты из `state.json`
+
+`state.get(symbol.lower(), "")` -> получить цену или пустую строку
+
+`write_last_price(symbol, price)` -> обновить цену монеты в JSON
+
+`state[symbol.lower()] = price` -> записать цену конкретной монеты
+
+`reset_price(symbol)` -> удалить монету из JSON
+
+`del state[symbol.lower()]` -> удалить сохранённую цену монеты

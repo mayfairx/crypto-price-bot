@@ -50,8 +50,9 @@ Create a `.env` file and add:
 
 ## Notes
 - The bot uses CoinGecko API
-- Each coin has its own saved state file
 - Supported coins right now: `btc`, `eth`, `sol`
+- `/price` and `/check` support multiple coins
 - Auto-tracking currently works for BTC only
+- Saved prices are stored in `state.json`
+- `state.json` is ignored by Git
 - Auto-tracking uses `python-telegram-bot[job-queue]`
-- State files are ignored by Git

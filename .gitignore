@@ -5,3 +5,5 @@ __pycache__/
 state.txt
 state_*.txt
 bot_repeat.py
+state.json
+state_*.txt
