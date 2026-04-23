@@ -200,3 +200,36 @@
 `reset_price(symbol)` -> удалить монету из JSON
 
 `del state[symbol.lower()]` -> удалить сохранённую цену монеты
+
+### subscriptions
+`subscriptions.json` -> хранит подписки пользователей
+
+пример:
+{
+  "chat_id": {
+    "btc": {
+      "interval": 5,
+      "last_check": 0
+    }
+  }
+}
+
+`/track btc 5` -> подписка на монету
+
+`/untrack btc` -> отписка
+
+---
+
+### time logic
+`time.time()` -> текущее время в секундах
+
+`current_time - last_check` -> сколько прошло времени
+
+если меньше интервала -> пропускаем
+
+---
+
+### job queue
+`run_repeating(func, interval=30)` -> запуск функции каждые 30 секунд
+
+используется для проверки подписок

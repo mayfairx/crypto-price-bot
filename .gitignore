@@ -7,3 +7,4 @@ state_*.txt
 bot_repeat.py
 state.json
 state_*.txt
+subscriptions.json

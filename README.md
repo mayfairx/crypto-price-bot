@@ -3,6 +3,9 @@
 A simple Telegram bot built with Python that gets crypto prices from the CoinGecko API.
 
 ## Features
+- `/track btc 1` — subscribe to BTC price updates (in minutes)
+- `/untrack btc` — stop tracking BTC
+
 - `/price btc` — show BTC price
 - `/price eth` — show ETH price
 - `/price sol` — show SOL price
@@ -56,3 +59,6 @@ Create a `.env` file and add:
 - Saved prices are stored in `state.json`
 - `state.json` is ignored by Git
 - Auto-tracking uses `python-telegram-bot[job-queue]`
+- Users can subscribe to price updates with custom intervals
+- Subscriptions are stored in `subscriptions.json`
+- The bot checks subscriptions every 30 seconds

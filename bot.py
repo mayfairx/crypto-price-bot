@@ -3,11 +3,46 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
 
 import os
+import json
+import time
 from price_checker import get_coin_price, check_price_change, reset_price, show_saved_price
 
 load_dotenv()
 
-price_job = None
+SUBSCRIPTIONS_FILE = "subscriptions.json"
+
+def read_subscriptions():
+    try:
+        with open(SUBSCRIPTIONS_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {}
+
+def write_subscriptions(subscriptions):
+    with open(SUBSCRIPTIONS_FILE, "w", encoding="utf-8") as file:
+        json.dump(subscriptions, file)
+
+async def check_subscriptions(context: ContextTypes.DEFAULT_TYPE):
+    subscriptions = read_subscriptions()
+    current_time = time.time()
+
+    for chat_id, coins in subscriptions.items():
+        for symbol, data in coins.items():
+            interval = data["interval"] * 60 
+            last_check = data["last_check"]
+
+            if current_time - last_check < interval:
+                continue
+            
+            result = check_price_change(symbol)
+
+            subscriptions[chat_id][symbol]["last_check"] = current_time
+
+            if "No changes." not in result:
+                await context.bot.send_message(chat_id=int(chat_id), text=result)
+
+    write_subscriptions(subscriptions)
+
 
 async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -60,47 +95,65 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Available commands:\n"
         "/price btc/eth/sol — show coin price\n"
-        "/check btc/eth/sol — check coin price change"
+        "/check btc/eth/sol — check coin price change\n"
+        "/track btc 1 — subscribe to price updates every 1 minute\n"
+        "/untrack btc — stop tracking coin"
     )
 
 async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Your chat id: {update.effective_chat.id}")
 
-async def send_price_update(context: ContextTypes.DEFAULT_TYPE):
-    chat_id = 1854986874
-    result = check_price_change("btc")
-    
-    if "No changes." in result:
-        return
-
-    await context.bot.send_message(chat_id=chat_id, text=result)
-
-async def track_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global price_job
-
-    if price_job is not None:
-        await update.message.reply_text("Auto-tracking is already on.")
+async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 2:
+        await update.message.reply_text("Use: /track btc 5")
         return
     
-    price_job = context.job_queue.run_repeating(
-        send_price_update,
-        interval=30,
-        first=5
-    )
+    symbol = context.args[0].lower()
+    interval = context.args[1]
 
-    await update.message.reply_text("Auto-tracking started.")
-
-async def track_off(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global price_job
-
-    if price_job is None:
-        await update.message.reply_text("Auto-tracking is already off.")
+    if not interval.isdigit():
+        await update.message.reply_text("Interval must be a number. Example: /track btc 5")
         return
     
-    price_job.schedule_removal()
-    price_job = None
+    interval = int(interval)
 
-    await update.message.reply_text("Auto-tracking stopped.")
+    subscriptions = read_subscriptions()
+    chat_id = str(update.effective_chat.id)
+
+    if chat_id not in subscriptions:
+        subscriptions[chat_id] = {}
+
+    subscriptions[chat_id][symbol] = {
+        "interval": interval,
+        "last_check": 0
+    }
+
+    write_subscriptions(subscriptions)
+
+    await update.message.reply_text(f"Tracking {symbol.upper()} every {interval} minutes.")    
+
+async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) != 1:
+        await update.message.reply_text("Use: /untrack btc")
+        return
+    
+    symbol = context.args[0].lower()
+    chat_id = str(update.effective_chat.id)
+
+    subscriptions = read_subscriptions()
+
+    if chat_id not in subscriptions or symbol not in subscriptions[chat_id]:
+        await update.message.reply_text(f"You are not tracking {symbol.upper()}.")
+        return
+    
+    del subscriptions[chat_id][symbol]
+
+    if not subscriptions[chat_id]:
+        del subscriptions[chat_id]
+
+    write_subscriptions(subscriptions)
+
+    await update.message.reply_text(f"Stopped tracking {symbol.upper()}.")
 
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
@@ -114,7 +167,9 @@ app.add_handler(CommandHandler("show", show))
 app.add_handler(CommandHandler("hide", remove_keyboard))
 app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("myid", myid))
-app.add_handler(CommandHandler("track_on", track_on))
-app.add_handler(CommandHandler("track_off", track_off))
+app.add_handler(CommandHandler("track", track))
+app.add_handler(CommandHandler("untrack", untrack))
+
+app.job_queue.run_repeating(check_subscriptions, interval=30, first=5)
 
 app.run_polling()
