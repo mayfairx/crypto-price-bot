@@ -1,78 +1,93 @@
-## Урок 1 — Crypto price bot: первая версия
+## Crypto Price Bot — версия 1
+
+### commands
+/price btc -> показать цену BTC
+/price eth -> показать цену ETH
+/price sol -> показать цену SOL
+
+/check -> проверить изменение цены BTC
+/show -> показать сохранённую цену BTC
+/reset -> сбросить сохранённую цену BTC
+
+---
 
 ### API request
-`def get_btc_price():` -> получить цену BTC с API CoinGecko
+`get_coin_price(symbol)` -> получить цену монеты с API CoinGecko
 
-`requests.get(url, params=params, timeout=10)` -> отправить GET-запрос к API
+`requests.get(url, params=params, timeout=10)` -> отправить GET-запрос
 
-`response.json()` -> превратить JSON-ответ в словарь Python
+`response.json()` -> превратить JSON в словарь
 
-`data["bitcoin"]["usd"]` -> достать цену BTC в долларах
+`data[coin_id]["usd"]` -> достать цену
+
+---
+
+### coin mapping
+`coin_map` -> переводит:
+- btc -> bitcoin
+- eth -> ethereum
+- sol -> solana
+
+`coin_map.get(symbol.lower())` -> получить нужную монету
+
+---
 
 ### error handling
 `try/except` -> защита от ошибок запроса
 
-`timeout=10` -> ждать ответ максимум 10 секунд
+`status_code != 200` -> проверка ответа сервера
 
-`response.status_code != 200` -> проверить, успешно ли ответил сервер
+`return None` -> если цена не получена
 
-`return None` -> вернуть пустое значение, если API не дал цену
+---
+
+### None
+`None` -> означает "нет результата" или "не удалось получить данные"
+
+используется:
+- если API не ответил
+- если монета не найдена
+
+---
 
 ### state
-`state.txt` -> файл, который хранит последнюю сохранённую цену
+`state.txt` -> хранит последнюю сохранённую цену (BTC)
 
-`read_last_price()` -> прочитать прошлую цену из `state.txt`
+`read_last_price()` -> прочитать цену
 
-`write_last_price(price)` -> записать новую цену в `state.txt`
+`write_last_price(price)` -> записать цену
 
-`file.read().strip()` -> убрать лишние пробелы и переносы строки
+---
 
 ### compare
-`check_price_change()` -> сравнить текущую цену с прошлой
+`check_price_change(symbol)` -> сравнить текущую и прошлую цену
 
-`if current_price is None:` -> проверить, удалось ли получить цену
+`current_price != last_price` -> проверка изменения
 
-`if last_price:` -> проверить, есть ли старая цена в `state.txt`
+`difference = current_price - last_price` -> разница
 
-`last_price = float(last_price)` -> перевести старую цену из строки в число
+`abs(difference)` -> убрать минус
 
-`if current_price != last_price:` -> проверить, изменилась ли цена
+`:.2f` -> формат числа
 
-`difference = current_price - last_price` -> посчитать разницу
-
-`if difference > 0:` -> цена выросла
-
-`else:` -> цена упала
-
-`abs(difference)` -> убрать минус у отрицательного числа
-
-`:.2f` -> показать разницу с двумя знаками после точки
+---
 
 ### first run
-`write_last_price(current_price)` -> сохранить цену при первом запуске
+если файл пустой:
+`write_last_price(current_price)`
 
-`return f"First saved price: ${current_price}"` -> сообщение, если старой цены ещё не было
+---
 
-### show/reset
-`reset_price()` -> очистить `state.txt`
+### bot logic
+`context.args` -> аргументы команды
 
-`show_saved_price()` -> показать, что сейчас сохранено в `state.txt`
+`symbol = context.args[0]` -> получить монету
 
-`return "No saved price."` -> сообщение, если файл пустой
+`symbol.upper()` -> красиво вывести BTC / ETH / SOL
 
-### bot
-`from price_checker import ...` -> импортировать функции логики в бота
+---
 
-`async def price(...)` -> команда `/price`
+### current limitations
+- `/check`, `/show`, `/reset` работают только с BTC
+- используется один `state.txt`
 
-`async def check(...)` -> команда `/check`
-
-`async def reset(...)` -> команда `/reset`
-
-`async def show(...)` -> команда `/show`
-
-`await update.message.reply_text(...)` -> отправить сообщение в Telegram
-
-`app.add_handler(CommandHandler(...))` -> привязать команду к функции
-
-`app.run_polling()` -> запустить бота

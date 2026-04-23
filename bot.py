@@ -3,26 +3,31 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
 
 import os
-from price_checker import get_btc_price, check_price_change, reset_price, show_saved_price
+from price_checker import get_coin_price, check_price_change, reset_price, show_saved_price
 
 load_dotenv()
 
 async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    btc_price = get_btc_price()
-
-    if btc_price is None:
-        await update.message.reply_text("Could not get BTC price from API.")
+    if not context.args:
+        await update.message.reply_text("Use: /price btc or /price eth or /price sol")
         return
+    
+    symbol = context.args[0].lower()
+    coin_price = get_coin_price(symbol)
 
-    await update.message.reply_text(f"BTC Price: ${btc_price}")
+    if coin_price is None:
+        await update.message.reply_text("Unknown coin or API error.")
+        return
+    
+    await update.message.reply_text(f"{symbol.upper()} price: ${coin_price}")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = check_price_change()
+    result = check_price_change("btc")
     await update.message.reply_text(result)
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reset_price()
-    await update.message.reply_text("Price reset. state.txt cleared.")
+    await update.message.reply_text("Saved BTC price reset.")
 
 async def show(update: Update, context: ContextTypes.DEFAULT_TYPE):
     result = show_saved_price()

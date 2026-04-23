@@ -1,10 +1,21 @@
 import requests
 
-def get_btc_price():
+def get_coin_price(symbol):
+
+    coin_map = {
+        "btc": "bitcoin",
+        "eth": "ethereum",
+        "sol": "solana"
+    }
+
+    coin_id = coin_map.get(symbol.lower())
+
+    if not coin_id:
+        return None
 
     url = "https://api.coingecko.com/api/v3/simple/price"
     params = {
-        "ids": "bitcoin",
+        "ids": coin_id,
         "vs_currencies": "usd"
     }
 
@@ -16,10 +27,10 @@ def get_btc_price():
         
         data = response.json()
 
-        if "bitcoin" not in data:
+        if coin_id not in data:
             return None
         
-        price = data["bitcoin"]["usd"]
+        price = data[coin_id]["usd"]
 
         return price
     
@@ -37,8 +48,8 @@ def write_last_price(price):
     with open("state.txt", "w", encoding="utf-8") as file:
         file.write(str(price))
 
-def check_price_change():
-    current_price = get_btc_price()
+def check_price_change(symbol):
+    current_price = get_coin_price(symbol)
 
     if current_price is None:
         return "Could not get BTC price from API."
@@ -80,6 +91,6 @@ def show_saved_price():
     saved_price = read_last_price()
 
     if saved_price:
-        return f"Saved price: ${saved_price}"
+        return f"Saved BTC price: ${saved_price}"
     else:
         return "No saved price."
