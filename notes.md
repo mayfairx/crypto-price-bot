@@ -1,93 +1,128 @@
-## Crypto Price Bot — версия 1
+## Crypto Price Bot — версия 2 (multi-coin)
 
 ### commands
-/price btc -> показать цену BTC
-/price eth -> показать цену ETH
-/price sol -> показать цену SOL
+/price btc -> показать цену BTC  
+/price eth -> показать цену ETH  
+/price sol -> показать цену SOL  
 
-/check -> проверить изменение цены BTC
-/show -> показать сохранённую цену BTC
-/reset -> сбросить сохранённую цену BTC
+/check btc -> проверить изменение цены BTC  
+/check eth -> проверить изменение цены ETH  
+/check sol -> проверить изменение цены SOL  
+
+/show btc -> показать сохранённую цену BTC  
+/show eth -> показать сохранённую цену ETH  
+/show sol -> показать сохранённую цену SOL  
+
+/reset btc -> сбросить сохранённую цену BTC  
+/reset eth -> сбросить сохранённую цену ETH  
+/reset sol -> сбросить сохранённую цену SOL  
 
 ---
 
 ### API request
-`get_coin_price(symbol)` -> получить цену монеты с API CoinGecko
+`get_coin_price(symbol)` -> получить цену монеты с API CoinGecko  
 
-`requests.get(url, params=params, timeout=10)` -> отправить GET-запрос
+`requests.get(url, params=params, timeout=10)` -> отправить GET-запрос  
 
-`response.json()` -> превратить JSON в словарь
+`response.json()` -> превратить JSON в словарь  
 
-`data[coin_id]["usd"]` -> достать цену
+`data[coin_id]["usd"]` -> достать цену  
 
 ---
 
 ### coin mapping
 `coin_map` -> переводит:
-- btc -> bitcoin
-- eth -> ethereum
-- sol -> solana
+- btc -> bitcoin  
+- eth -> ethereum  
+- sol -> solana  
 
-`coin_map.get(symbol.lower())` -> получить нужную монету
+`coin_map.get(symbol.lower())` -> получить нужную монету  
 
 ---
 
 ### error handling
-`try/except` -> защита от ошибок запроса
+`try/except` -> защита от ошибок запроса  
 
-`status_code != 200` -> проверка ответа сервера
+`status_code != 200` -> проверка ответа сервера  
 
-`return None` -> если цена не получена
+`return None` -> если цена не получена  
 
 ---
 
 ### None
-`None` -> означает "нет результата" или "не удалось получить данные"
+`None` -> означает "нет результата" или "не удалось получить данные"  
 
 используется:
-- если API не ответил
-- если монета не найдена
+- если API не ответил  
+- если монета не найдена  
 
 ---
 
-### state
-`state.txt` -> хранит последнюю сохранённую цену (BTC)
+### state (multi-coin)
+`get_state_filename(symbol)` -> создать файл для монеты  
 
-`read_last_price()` -> прочитать цену
+пример:
+- state_btc.txt  
+- state_eth.txt  
+- state_sol.txt  
 
-`write_last_price(price)` -> записать цену
+---
+
+### file logic
+`read_last_price(symbol)` -> прочитать цену конкретной монеты  
+
+`write_last_price(symbol, price)` -> записать цену конкретной монеты  
 
 ---
 
 ### compare
-`check_price_change(symbol)` -> сравнить текущую и прошлую цену
+`check_price_change(symbol)` -> сравнить текущую и прошлую цену  
 
-`current_price != last_price` -> проверка изменения
+`current_price != last_price` -> проверка изменения  
 
-`difference = current_price - last_price` -> разница
+`difference = current_price - last_price` -> разница  
 
-`abs(difference)` -> убрать минус
+`abs(difference)` -> убрать минус  
 
-`:.2f` -> формат числа
+`:.2f` -> формат числа  
 
 ---
 
 ### first run
 если файл пустой:
-`write_last_price(current_price)`
+`write_last_price(symbol, current_price)`  
 
 ---
 
 ### bot logic
-`context.args` -> аргументы команды
+`context.args` -> аргументы команды  
 
-`symbol = context.args[0]` -> получить монету
+пример:
+/check btc -> ["btc"]  
 
-`symbol.upper()` -> красиво вывести BTC / ETH / SOL
+`symbol = context.args[0]` -> получить монету  
+
+`symbol.lower()` -> нормализовать ввод  
+
+`symbol.upper()` -> красиво вывести BTC / ETH / SOL  
+
+---
+
+### current features
+- несколько монет (btc, eth, sol)  
+- отдельный state для каждой монеты  
+- команды работают независимо  
 
 ---
 
 ### current limitations
-- `/check`, `/show`, `/reset` работают только с BTC
-- используется один `state.txt`
+- нет авто-уведомлений  
+- нет подписки на цену  
+- проверка только вручную  
 
+---
+
+### next steps
+- авто-алерты (бот сам пишет при изменении цены)  
+- /track btc  
+- проверка по таймеру  

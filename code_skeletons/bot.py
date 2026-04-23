@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, ContextTypes
 from dotenv import load_dotenv
 
@@ -22,16 +22,44 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"{symbol.upper()} price: ${...}")
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = check_price_change("...")
+    if not context.args:
+        await update.message.reply_text("...")
+        return
+
+    symbol = context.args[0].lower()
+    result = check_price_change(symbol)
+    await update.message.reply_text(...)
+
+async def show(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("...")
+        return
+
+    symbol = context.args[0].lower()
+    result = show_saved_price(symbol)
     await update.message.reply_text(...)
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    reset_price()
-    await update.message.reply_text("...")
+    if not context.args:
+        await update.message.reply_text("...")
+        return
 
-async def show(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    result = show_saved_price()
+    symbol = context.args[0].lower()
+    result = reset_price(symbol)
     await update.message.reply_text(...)
+
+async def remove_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "...",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Available commands:\n"
+        "/price btc/eth/sol — show coin price\n"
+        "/check btc/eth/sol — check coin price change"
+    )
 
 TOKEN = os.getenv("...")
 if not TOKEN:
@@ -40,7 +68,9 @@ if not TOKEN:
 app = Application.builder().token(...).build()
 app.add_handler(CommandHandler("price", ...))
 app.add_handler(CommandHandler("check", ...))
-app.add_handler(CommandHandler("reset", ...))
 app.add_handler(CommandHandler("show", ...))
+app.add_handler(CommandHandler("reset", ...))
+app.add_handler(CommandHandler("hide", ...))
+app.add_handler(CommandHandler("help", ...))
 
 app.run_polling()

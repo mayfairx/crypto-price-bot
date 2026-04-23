@@ -29,21 +29,27 @@ def get_coin_price(symbol):
         if coin_id not in data:
             return None
 
-        price = data[coin_id]["usd"]
-        return price
+        return data[coin_id]["usd"]
 
     except requests.RequestException:
         return None
 
-def read_last_price():
+def get_state_filename(symbol):
+    return f"state_{...}.txt"
+
+def read_last_price(symbol):
+    filename = get_state_filename(symbol)
+
     try:
-        with open("state.txt", "r", encoding="utf-8") as file:
+        with open(filename, "r", encoding="utf-8") as file:
             return ...
     except FileNotFoundError:
-        return "..."
+        return ""
 
-def write_last_price(price):
-    with open("state.txt", "w", encoding="utf-8") as file:
+def write_last_price(symbol, price):
+    filename = get_state_filename(symbol)
+
+    with open(filename, "w", encoding="utf-8") as file:
         file.write(...)
 
 def check_price_change(symbol):
@@ -52,43 +58,47 @@ def check_price_change(symbol):
     if current_price is None:
         return "..."
 
-    last_price = read_last_price()
+    last_price = read_last_price(symbol)
 
     if last_price:
         last_price = float(last_price)
 
         if current_price != last_price:
             difference = current_price - last_price
-            write_last_price(current_price)
+            write_last_price(symbol, current_price)
 
             if difference > 0:
                 return (
-                    f"Price changed.\n\n"
+                    f"{symbol.upper()} price changed.\n\n"
                     f"Old price: ${...}\n"
                     f"New price: ${...}\n"
                     f"Difference: +${...:.2f}"
                 )
             else:
                 return (
-                    f"Price changed.\n\n"
+                    f"{symbol.upper()} price changed.\n\n"
                     f"Old price: ${...}\n"
                     f"New price: ${...}\n"
                     f"Difference: -${...:.2f}"
                 )
         else:
-            return f"No changes.\n\nCurrent price: ${...}"
+            return f"No changes.\n\nCurrent {symbol.upper()} price: ${...}"
     else:
-        write_last_price(current_price)
-        return f"First saved price: ${...}"
+        write_last_price(symbol, current_price)
+        return f"First saved {symbol.upper()} price: ${...}"
 
-def reset_price():
-    with open("state.txt", "w", encoding="utf-8") as file:
+def reset_price(symbol):
+    filename = get_state_filename(symbol)
+
+    with open(filename, "w", encoding="utf-8") as file:
         file.write("")
 
-def show_saved_price():
-    saved_price = read_last_price()
+    return f"Saved {symbol.upper()} price reset."
+
+def show_saved_price(symbol):
+    saved_price = read_last_price(symbol)
 
     if saved_price:
-        return f"Saved BTC price: ${...}"
+        return f"Saved {symbol.upper()} price: ${...}"
     else:
-        return "..."
+        return f"No saved {symbol.upper()} price."
