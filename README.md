@@ -9,7 +9,7 @@ A simple Telegram bot built with Python that gets crypto prices from the CoinGec
 
 - `/check btc` — check BTC price change
 - `/check eth` — check ETH price change
-- `/check sol` — check SOL price change
+- `/check sol` — check ETH price change
 
 - `/show btc` — show saved BTC price
 - `/show eth` — show saved ETH price
@@ -18,6 +18,9 @@ A simple Telegram bot built with Python that gets crypto prices from the CoinGec
 - `/reset btc` — reset saved BTC price
 - `/reset eth` — reset saved ETH price
 - `/reset sol` — reset saved SOL price
+
+- `/track_on` — start automatic BTC tracking
+- `/track_off` — stop automatic BTC tracking
 
 - `/help` — show main user commands
 - `/hide` — remove old keyboard
@@ -49,3 +52,6 @@ Create a `.env` file and add:
 - The bot uses CoinGecko API
 - Each coin has its own saved state file
 - Supported coins right now: `btc`, `eth`, `sol`
+- Auto-tracking currently works for BTC only
+- Auto-tracking uses `python-telegram-bot[job-queue]`
+- State files are ignored by Git
