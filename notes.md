@@ -233,3 +233,108 @@
 `run_repeating(func, interval=30)` -> запуск функции каждые 30 секунд
 
 используется для проверки подписок
+
+---
+
+### subscription commands
+`/track btc 5` -> подписаться на BTC каждые 5 минут
+
+`/untrack btc` -> отписаться от BTC
+
+`/list` -> показать активные подписки
+
+---
+
+### subscriptions JSON
+`subscriptions.json` -> хранит подписки пользователей
+
+пример:
+{
+  "1854986874": {
+    "btc": {
+      "interval": 5,
+      "last_check": 0
+    }
+  }
+}
+
+`chat_id` -> id чата пользователя
+
+`str(update.effective_chat.id)` -> превратить chat_id в строку для JSON
+
+---
+
+### args
+`context.args` -> список аргументов после команды
+
+пример:
+/track btc 5 -> ["btc", "5"]
+
+`context.args[0]` -> первый аргумент, монета
+
+`context.args[1]` -> второй аргумент, интервал
+
+---
+
+### interval validation
+`interval.isdigit()` -> проверить, что интервал состоит только из цифр
+
+`int(interval)` -> превратить строку `"5"` в число `5`
+
+---
+
+### subscriptions read/write
+`read_subscriptions()` -> прочитать `subscriptions.json`
+
+`write_subscriptions(subscriptions)` -> записать подписки обратно в JSON
+
+---
+
+### subscription structure
+`subscriptions[chat_id] = {}` -> создать пустой список подписок для пользователя
+
+`subscriptions[chat_id][symbol] = {...}` -> сохранить подписку на монету
+
+пример:
+subscriptions[chat_id]["btc"] = {
+    "interval": 5,
+    "last_check": 0
+}
+
+---
+
+### checking subscriptions
+`check_subscriptions()` -> проверяет все активные подписки
+
+`time.time()` -> текущее время в секундах
+
+`current_time - last_check` -> сколько секунд прошло с прошлой проверки
+
+`interval * 60` -> перевести минуты в секунды
+
+`continue` -> пропустить текущую подписку и перейти к следующей
+
+---
+
+### loop over subscriptions
+`for chat_id, coins in subscriptions.items()` -> пройтись по всем пользователям
+
+`for symbol, data in coins.items()` -> пройтись по всем монетам пользователя
+
+---
+
+### list command
+`/list` -> показать, что пользователь сейчас отслеживает
+
+`subscriptions[chat_id].items()` -> получить все монеты пользователя
+
+`message += ...` -> добавить новую строку к сообщению
+
+---
+
+### remove subscription
+`del subscriptions[chat_id][symbol]` -> удалить одну монету из подписок пользователя
+
+`if not subscriptions[chat_id]` -> если у пользователя больше нет подписок
+
+`del subscriptions[chat_id]` -> удалить пользователя из subscriptions

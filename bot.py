@@ -155,6 +155,22 @@ async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"Stopped tracking {symbol.upper()}.")
 
+async def list_tracking(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = str(update.effective_chat.id)
+    subscriptions = read_subscriptions()
+
+    if chat_id not in subscriptions or not subscriptions[chat_id]:
+        await update.message.reply_text("You are not tracking anything.")
+        return
+    
+    message = "You are tracking:\n"
+
+    for symbol, data in subscriptions[chat_id].items():
+        interval = data["interval"]
+        message += f"{symbol.upper()} — every {interval} min\n"
+
+    await update.message.reply_text(message)
+
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
     raise ValueError("BOT_TOKEN not found in .env")
@@ -169,6 +185,7 @@ app.add_handler(CommandHandler("help", help_command))
 app.add_handler(CommandHandler("myid", myid))
 app.add_handler(CommandHandler("track", track))
 app.add_handler(CommandHandler("untrack", untrack))
+app.add_handler(CommandHandler("list", list_tracking))
 
 app.job_queue.run_repeating(check_subscriptions, interval=30, first=5)
 
