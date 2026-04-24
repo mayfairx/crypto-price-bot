@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 import os
 import json
 import time
+import threading
 from price_checker import get_coin_price, check_price_change, reset_price, show_saved_price
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
 
 load_dotenv()
 
@@ -47,7 +50,7 @@ async def check_subscriptions(context: ContextTypes.DEFAULT_TYPE):
     write_subscriptions(subscriptions)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         "Welcome 👋\n\n"
         "This bot lets you monitor cryptocurrency prices in real time.\n\n"
         "Supported coins: BTC, ETH, SOL.\n\n"
@@ -64,56 +67,56 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Use: /price btc or /price eth or /price sol")
+        await update.effective_message.reply_text("Use: /price btc or /price eth or /price sol")
         return
     
     symbol = context.args[0].lower()
     coin_price = get_coin_price(symbol)
 
     if coin_price is None:
-        await update.message.reply_text("Unknown coin or API error.")
+        await update.effective_message.reply_text("Unknown coin or API error.")
         return
     
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"{symbol.upper()}\n\n"
         f"${coin_price:,.2f}"
     )
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Use /check btc or /check eth or /check sol")
+        await update.effective_message.reply_text("Use /check btc or /check eth or /check sol")
         return
     
     symbol = context.args[0].lower()
     result = check_price_change(symbol)
-    await update.message.reply_text(result)
+    await update.effective_message.reply_text(result)
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Use /reset btc or /reset eth or /reset sol")
+        await update.effective_message.reply_text("Use /reset btc or /reset eth or /reset sol")
         return
     
     symbol = context.args[0].lower()
     result = reset_price(symbol)
-    await update.message.reply_text(result)
+    await update.effective_message.reply_text(result)
 
 async def show(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Use /show btc or /show eth or /show sol")
+        await update.effective_message.reply_text("Use /show btc or /show eth or /show sol")
         return
     
     symbol = context.args[0].lower()
     result = show_saved_price(symbol)
-    await update.message.reply_text(result)
+    await update.effective_message.reply_text(result)
 
 async def remove_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         "Keyboard removed.",
         reply_markup=ReplyKeyboardRemove()
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         "Commands:\n\n"
         "/price <coin> — view current price\n"
         "/check <coin> — check price change\n"
@@ -124,18 +127,18 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f"Your chat id: {update.effective_chat.id}")
+    await update.effective_message.reply_text(f"Your chat id: {update.effective_chat.id}")
 
 async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
-        await update.message.reply_text("Use: /track <coin>")
+        await update.effective_message.reply_text("Use: /track <coin> <minutes>")
         return
     
     symbol = context.args[0].lower()
     interval = context.args[1]
 
     if not interval.isdigit():
-        await update.message.reply_text("Interval must be a number. Example: /track btc 5")
+        await update.effective_message.reply_text("Interval must be a number. Example: /track sol 5")
         return
     
     interval = int(interval)
@@ -153,7 +156,7 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     write_subscriptions(subscriptions)
 
-    await update.message.reply_text(
+    await update.effective_message.reply_text(
         f"{symbol.upper()}\n\n"
         f"tracking enabled\n"
         f"interval: {interval} min"
@@ -161,7 +164,7 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
-        await update.message.reply_text("Use: /untrack btc")
+        await update.effective_message.reply_text("Use: /untrack <coin>")
         return
     
     symbol = context.args[0].lower()
@@ -170,7 +173,7 @@ async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     subscriptions = read_subscriptions()
 
     if chat_id not in subscriptions or symbol not in subscriptions[chat_id]:
-        await update.message.reply_text(f"You are not tracking {symbol.upper()}.")
+        await update.effective_message.reply_text(f"You are not tracking {symbol.upper()}.")
         return
     
     del subscriptions[chat_id][symbol]
@@ -180,16 +183,17 @@ async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     write_subscriptions(subscriptions)
 
-    await update.message.reply_text(
-    f"{symbol.upper()}\n\ntracking disabled"
-)
+    await update.effective_message.reply_text(
+        f"{symbol.upper()}\n\n"
+        f"tracking disabled"
+    )
 
 async def list_tracking(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
     subscriptions = read_subscriptions()
 
     if chat_id not in subscriptions or not subscriptions[chat_id]:
-        await update.message.reply_text("You are not tracking anything.")
+        await update.effective_message.reply_text("You are not tracking anything.")
         return
     
     message = "You are tracking:\n"
@@ -198,7 +202,7 @@ async def list_tracking(update: Update, context: ContextTypes.DEFAULT_TYPE):
         interval = data["interval"]
         message += f"{symbol.upper()} — every {interval} min\n"
 
-    await update.message.reply_text(message)
+    await update.effective_message.reply_text(message)
 
 TOKEN = os.getenv("BOT_TOKEN")
 if not TOKEN:
@@ -219,14 +223,15 @@ app.add_handler(CommandHandler("start", start))
 
 app.job_queue.run_repeating(check_subscriptions, interval=30, first=5)
 
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Bot is running")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()    
 
 def run_server():
     server = HTTPServer(("0.0.0.0", 10000), Handler)

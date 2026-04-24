@@ -27,7 +27,6 @@ A simple Telegram bot built with Python that tracks cryptocurrency prices in rea
 - `price_checker.py` — API and price logic
 - `state.json` — saved coin prices (ignored)
 - `subscriptions.json` — user subscriptions (ignored)
-- `notes.md` — learning notes
 - `requirements.txt` — dependencies
 - `.env` — bot token (not uploaded)
 - `.gitignore` — ignored files
