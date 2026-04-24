@@ -38,9 +38,12 @@ async def check_subscriptions(context: ContextTypes.DEFAULT_TYPE):
 
             subscriptions[chat_id][symbol]["last_check"] = current_time
 
-            if "No changes." not in result:
-                await context.bot.send_message(chat_id=int(chat_id), text=result)
-
+            if "No changes." in result:
+                continue
+            if "Could not get coin price from API." in result:
+                continue
+            await context.bot.send_message(chat_id=int(chat_id), text=result)
+            
     write_subscriptions(subscriptions)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -49,10 +52,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "This bot lets you monitor cryptocurrency prices in real time.\n\n"
         "Supported coins: BTC, ETH, SOL.\n\n"
         "Available actions:\n"
-        "• /price <coin> — view current price\n"
-        "• /track <coin> <minutes> — receive scheduled updates\n"
-        "• /list — view active subscriptions\n\n"
-        "Example:\n"
+        "/price <coin> — view current price\n"
+        "/track <coin> <minutes> — receive scheduled updates\n"
+        "/list — view active subscriptions\n\n"
+        "Example:\n\n"
         "/price sol\n"
         "/track sol 5\n\n"
         "Use /help to see all commands."
@@ -71,7 +74,10 @@ async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Unknown coin or API error.")
         return
     
-    await update.message.reply_text(f"{symbol.upper()} price: ${coin_price}")
+    await update.message.reply_text(
+        f"{symbol.upper()}\n\n"
+        f"${coin_price:,.2f}"
+    )
 
 async def check(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -111,10 +117,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Commands:\n\n"
         "/price <coin> — view current price\n"
         "/check <coin> — check price change\n"
-        "/track <coin> <minutes> — enable scheduled updates\n"
+        "/track <coin> <minutes> — enable tracking\n"
         "/untrack <coin> — disable tracking\n"
         "/list — view active subscriptions\n\n"
-        "Supported coins: BTC, ETH, SOL.\n\n"
+        "Supported coins: BTC, ETH, SOL"
     )
 
 async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -147,7 +153,11 @@ async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     write_subscriptions(subscriptions)
 
-    await update.message.reply_text(f"Tracking {symbol.upper()} every {interval} minutes.")    
+    await update.message.reply_text(
+        f"{symbol.upper()}\n\n"
+        f"tracking enabled\n"
+        f"interval: {interval} min"
+    )    
 
 async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 1:
@@ -170,7 +180,9 @@ async def untrack(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     write_subscriptions(subscriptions)
 
-    await update.message.reply_text(f"Stopped tracking {symbol.upper()}.")
+    await update.message.reply_text(
+    f"{symbol.upper()}\n\ntracking disabled"
+)
 
 async def list_tracking(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = str(update.effective_chat.id)
@@ -220,6 +232,6 @@ def run_server():
     server = HTTPServer(("0.0.0.0", 10000), Handler)
     server.serve_forever()
 
-threading.Thread(target=run_server).start()
+threading.Thread(target=run_server, daemon=True).start()
 
 app.run_polling()

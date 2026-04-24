@@ -77,23 +77,27 @@ def check_price_change(symbol):
 
             if difference > 0:
                 return (
-                    f"{symbol.upper()} price changed.\n\n"
-                    f"Old price: ${last_price}\n"
-                    f"New price: ${current_price}\n"
-                    f"Difference: +${difference:.2f}"
+                    f"{symbol.upper()}\n\n"
+                    f"${current_price:,.2f} 📈 +${difference:,.2f}"
                 )
             else:
                 return (
-                    f"{symbol.upper()} price changed.\n\n"
-                    f"Old price: ${last_price}\n"
-                    f"New price: ${current_price}\n"
-                    f"Difference: -${abs(difference):.2f}"
+                    f"{symbol.upper()}\n\n"
+                    f"${current_price:,.2f} 📉 -${abs(difference):,.2f}"
                 )
         else:
-            return f"No changes.\n\nCurrent {symbol.upper()} price: ${current_price}"
+            return (
+                f"{symbol.upper()}\n\n"
+                f"${current_price:,.2f}\n"
+                f"no changes"
+            )
     else:
         write_last_price(symbol, current_price)
-        return f"First saved {symbol.upper()} price: ${current_price}"
+        return (
+            f"{symbol.upper()}\n\n"
+            f"${current_price:,.2f}\n"
+            f"tracking started"
+        )  
 
 def reset_price(symbol):
     state = read_state()
@@ -101,14 +105,18 @@ def reset_price(symbol):
     if symbol.lower() in state:
         del state[symbol.lower()]
         write_state(state)
-        return f"Saved {symbol.upper()} price reset."
+        return f"{symbol.upper()}\n\nsaved price reset."
     else:
-        return f"No saved {symbol.upper()} price."
+        return f"{symbol.upper()}\n\nno saved price."
 
 def show_saved_price(symbol):
     saved_price = read_last_price(symbol)
 
     if saved_price:
-        return f"Saved {symbol.upper()} price: ${saved_price}"
+        return (
+            f"{symbol.upper()}\n\n"
+            f"${float(saved_price):,.2f}\n"
+            f"saved price"
+        )
     else:
-        return f"No saved {symbol.upper()} price."
+        return f"{symbol.upper()}\n\nno saved price"
