@@ -190,3 +190,18 @@ app.add_handler(CommandHandler("list", list_tracking))
 app.job_queue.run_repeating(check_subscriptions, interval=30, first=5)
 
 app.run_polling()
+
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is running")
+
+def run_server():
+    server = HTTPServer(("0.0.0.0", 10000), Handler)
+    server.serve_forever()
+
+threading.Thread(target=run_server).start()
