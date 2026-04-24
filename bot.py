@@ -128,7 +128,7 @@ async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def track(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) != 2:
-        await update.message.reply_text("Use: /track btc 5")
+        await update.message.reply_text("Use: /track <coin>")
         return
     
     symbol = context.args[0].lower()
