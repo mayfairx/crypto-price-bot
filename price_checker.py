@@ -105,9 +105,9 @@ def reset_price(symbol):
     if symbol.lower() in state:
         del state[symbol.lower()]
         write_state(state)
-        return f"{symbol.upper()}\n\nsaved price reset."
+        return f"{symbol.upper()}\n\nsaved price reset"
     else:
-        return f"{symbol.upper()}\n\nno saved price."
+        return f"{symbol.upper()}\n\nno saved price"
 
 def show_saved_price(symbol):
     saved_price = read_last_price(symbol)
