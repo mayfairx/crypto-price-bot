@@ -239,4 +239,4 @@ def run_server():
 
 threading.Thread(target=run_server, daemon=True).start()
 
-app.run_polling()
+app.run_polling(drop_pending_updates=True)
