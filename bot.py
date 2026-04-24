@@ -43,6 +43,21 @@ async def check_subscriptions(context: ContextTypes.DEFAULT_TYPE):
 
     write_subscriptions(subscriptions)
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Welcome 👋\n\n"
+        "This bot lets you monitor cryptocurrency prices in real time.\n\n"
+        "Supported coins: BTC, ETH, SOL.\n\n"
+        "Available actions:\n"
+        "• /price <coin> — view current price\n"
+        "• /track <coin> <minutes> — receive scheduled updates\n"
+        "• /list — view active subscriptions\n\n"
+        "Example:\n"
+        "/price sol\n"
+        "/track sol 5\n\n"
+        "Use /help to see all commands."
+    )
+
 
 async def price(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -93,11 +108,13 @@ async def remove_keyboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Available commands:\n"
-        "/price btc/eth/sol — show coin price\n"
-        "/check btc/eth/sol — check coin price change\n"
-        "/track btc 1 — subscribe to price updates every 1 minute\n"
-        "/untrack btc — stop tracking coin"
+        "Commands:\n\n"
+        "/price <coin> — view current price\n"
+        "/check <coin> — check price change\n"
+        "/track <coin> <minutes> — enable scheduled updates\n"
+        "/untrack <coin> — disable tracking\n"
+        "/list — view active subscriptions\n\n"
+        "Supported coins: BTC, ETH, SOL.\n\n"
     )
 
 async def myid(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -186,6 +203,7 @@ app.add_handler(CommandHandler("myid", myid))
 app.add_handler(CommandHandler("track", track))
 app.add_handler(CommandHandler("untrack", untrack))
 app.add_handler(CommandHandler("list", list_tracking))
+app.add_handler(CommandHandler("start", start))
 
 app.job_queue.run_repeating(check_subscriptions, interval=30, first=5)
 
@@ -205,4 +223,3 @@ def run_server():
 threading.Thread(target=run_server).start()
 
 app.run_polling()
-
